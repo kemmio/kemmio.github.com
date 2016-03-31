@@ -4,7 +4,7 @@ description: >
   kemmio's hacking and CTF write-up blog
 
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "localhost:4000" #"http://kemm.io" # the base hostname & protocol for your site
+url: "kemmio.github.io" #"http://kemm.io" # the base hostname & protocol for your site
 
 author:
   fullname: kemmio
