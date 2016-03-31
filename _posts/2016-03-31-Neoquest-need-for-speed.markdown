@@ -44,7 +44,7 @@ The commads consist of:
 - Break:{b:"somevalue"}
 - Change Speed:{s:"somevalue"}
 
-All this research continues with very lang and tedious and painfull try to reverse engineer the Golang run-time, recreate IAT and symbol tables, find the possible DWARF2 segments(lol wut?!), having no reslut I decided to take a break and to come back to this task when some new idea comes to me. And hopefully it came: *Lets cheat!*.
+All this research continues with very lang and tedious and painfull try to reverse engineer the Golang run-time, recreate IAT and symbol tables, find the possible DWARF2 segments(lol wut?!), having no reslut I decided to take a break and to come back to this task when some new idea comes to me. And hopefully it came(or someone helped it come): *Lets cheat!*.
 
 ## Download CheatEngine
 
