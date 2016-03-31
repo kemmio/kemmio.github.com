@@ -33,6 +33,8 @@ This threads firstly signal the semaphore <b>sem</b> then wait for a command to 
 Here is the code of parent thread function after it inits the semaphore
 ![screenshot  of 3rd thread](http://{{ site.url }}/downloads/volga-broken/sem_run_waith.jpg)
 Now we understand that the root of the problem is the deadlock that was caused by a mistake of the programmer, as one of the threads should wait on <b>stru_6034E0</b> instead of both waiting on <b>stru_603500</b>
+Here is the diagram of semaphores if you need more explanation:
+![screenshot  of 3rd thread](http://{{ site.url }}/downloads/volga-broken/diagram.svg)
 So we go to the HEX-view in IDA press F2 and change the instruction to point to <b>stru_6034E0</b>
 ![screenshot  of 3rd thread](http://{{ site.url }}/downloads/volga-broken/patch1.jpg)
 After we press F2 once again to save our patch and go to <b>Edit->Patch Program->Apply patches to input file..</b>
