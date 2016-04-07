@@ -8,7 +8,7 @@ url: "kemmio.github.io" #"http://kemm.io" # the base hostname & protocol for you
 
 author:
   fullname: kemmio
-  github: kemmio
+  #github: kemmio
   # disqus: your_disqus_forum_shortname
 
 # google_analytics: 'UA-XXXXXXXX-X'
