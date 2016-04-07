@@ -16,7 +16,7 @@ List of actions
 - Press *'U'* to undefine the IDA heuristic analysis
 - Press *'C'* to define it as a code part
 
-Since IDA is flow-driven dissassembler it will to lots of work for you just from defining the right entry point.
+Since IDA is flow-driven dissassembler it will do lots of work for you just from defining the right entry point.
 {% highlight ruby %}
 seg000:0000                 jmp     short loc_29
 {% endhighlight %}
@@ -76,7 +76,7 @@ seg000:0028                 retn
 seg000:0028 sub_1B          endp
 seg000:0028
 {% endhighlight %}
-We see that **sub_2**, **sub_E** and **sub_1B** they change the return address this is done to obfuscate the assembly. Imagine breaking into instruction somewhere from middle. If you want to reverse this you need to do this steps whenever you see a **call sub_2/sub_E/sub_1B**
+We see that **sub_2**, **sub_E** and **sub_1B** change the return address. This is done to obfuscate the assembly. Imagine breaking into instruction somewhere from the middle. If you want to reverse this you will need to do this steps whenever you see a **call sub_2/sub_E/sub_1B**
 
 - Press *'U'* on the instruction right after the call command
 - Press *'C'* on the byte according on the adjusted return value(+1/+2/+4)
@@ -110,11 +110,11 @@ seg000:0089 sub_83          endp
 seg000:0089
 {% endhighlight %}
 
-Then it loads *0x8000* into **SS** and *0xf000* into **SP**. This later part is not that much interesting as the data and extended registers. Basicly this part is pretty much strandard stage 1 mbr loader. After correcting all this he makes a long jmp but configures **DS** and **ES** as *0x100*.
+Then it loads *0x8000* into **SS** and *0xf000* into **SP**. This later part is not that much interesting as the data and extended registers. Basicly this part is pretty much strandard stage 1 mbr loader. After correcting all this it makes a long jmp but configures **DS** and **ES** as *0x100*.
 {% highlight nasm %}
 seg000:004A                 jmp     large far ptr 100h:0
 {% endhighlight %}
-So in memory this code will reside in *0x1000* but in the file it it not hard to see that this is  *0x200*, just after the large nopsled. The second stage of bootloader has same obfuscation techniques hence **loc_255** **loc_261** and **loc_26E**. This part of code prints of the screen useing **int 10h**
+So in memory this code will reside in *0x1000* but in the file it is other address it not hard to see that this is  *0x200*, just after the large nopsled. The second stage of bootloader has same obfuscation techniques, hence **loc_255** **loc_261** and **loc_26E**. This part of code prints of the screen using **int 10h**
 {% highlight ruby %}
 Whats the secret word?
 >
@@ -141,11 +141,11 @@ seg000:035B                 cmp     bx, 0
 seg000:035E                 jz      short loc_393
 seg000:0360                 jmp     short loc_363
 {% endhighlight %}
-So the symbols must be between *0x20* and *0x7E* in the ASCII table the input is written in *0x1003*(*0x100**16+**SI**) . Then it moves *0x1003* into **EAX** and doea a long jmp
+So the symbols must be between *0x20* and *0x7E* in the ASCII table. The input is written in *0x1003*(*0x100**16+**SI**) . Then the code moves *0x1003* into **EAX** and does a long jmp
 {% highlight ruby %}
 seg000:04FE                 jmp     large far ptr 8:1400h
 {% endhighlight %}
-The code resides in *0x1400* in memory but in file it will be after another nopsled at the address *0x600*. This part is used to validate user input thus being the most interesting part for us. Unfortunately this is the most hash part to understand because the code is more randomly splited and using *undefine*+*define as code* technique be not that resultive. But still we could find out quite interesting code part
+The code resides in *0x1400* in memory but in file it will be after another nopsled, at the address *0x600*. This part is used to validate user input thus being the most interesting part for us. Unfortunately this is the most harsh part to understand because the code is more randomly splitted and using *undefine*+*define as code* technique will not be that resultive. But still we could find out quite interesting code part
 {% highlight ruby %}
 seg000:06AB                 cmp     cl, 47h ; 'G'
 seg000:06AE                 jnz     short loc_6C4
@@ -190,11 +190,11 @@ Unpause **QEMU** and attaching **IDA** with a remote **GDB** debugger.
 ![screenshot  of cmd remote GBD](http://{{ site.url }}/downloads/nuitdehack-matryoshka/gbd.PNG)
 Press *F9* in **IDA** and write in **Good_Game** as the input
 ![screenshot  of QEMU window](http://{{ site.url }}/downloads/nuitdehack-matryoshka/qemu.PNG)
-We see that Good_Game was not that useless at least we have the "Magic word". We have a good point to start the debugging. Goto **IDA** and press *'G'* write there *0x1400*(already discussed why not *0x600*) and put a breakpoint there(*F2* button). Write anything that starts with **Good_Game** e.g **Good_Gameblablabla** since it just looks for the input to contain it and not necessarily be equal. Breakpoint hits. Now trace up the code with *F8*(over) or *F7*(into). At first time you may be confused since from some moment code becomes obscure and uses lots of *int* instructions but no calls to any procedures that seems to have payloads. This is just a misthinking and if you watch the code once more you will get the answer. Keep a close look at this line of code
+We see that Good_Game was not that useless at least we have the "Magic word". We have a good point to start the debugging. Goto **IDA** and press *'G'* write there *0x1400*(already discussed why not *0x600*) and put a breakpoint there(*F2* button). Write anything that starts with **Good_Game** e.g **Good_Gameblablabla** since it just looks for the input to contain it and not necessarily be equal. Breakpoint hits -> now trace up the code with *F8*(over) or *F7*(into). At first time you may be confused since from some moment code becomes obscure and uses lots of *int* instructions, but no calls to any procedures that seems to have payloads. This is just a misthinking and if you watch the code once more you will get the answer. Keep a close look at this line of code
 {% highlight ruby %}
 MEMORY:00001945 lidt    fword ptr byte_17FE
 {% endhighlight %}
-It loads the new **IDT** from the address *0x17FE*. **byte_17FE** should point at fword like this:
+It loads the new **IDT** from the address *0x17FE*. **byte_17FE** should point at *fword* like this:
 ![screenshot  of IDT](http://{{ site.url }}/downloads/nuitdehack-matryoshka/lidt.jpg)
 Goto hex view and take a look at the bytes pointed by the variable
 {% highlight ruby %}
