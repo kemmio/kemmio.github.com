@@ -4,9 +4,9 @@ title:  "PHDays VI HackQuest Secure Console(category:reverse)"
 subtitle: "YABRT: Yet Another BIOS Reversing Task"
 categories: [ctf]
 ---
-First you get a link to a web-site which emulates some BIOS and some basic MBR staged code. Open the source-code view and you will eventually find links to download the images, we need only **/linux.iso** one the other are just basic vgabios and seabios images, with no patching in them. As always dealing with this kind of tasks we need **QEMU** and the good-old **IDA**. Load image with **QEMU**
+First you get a link to a web-site which emulates some BIOS and some basic MBR staged code. Open the source-code view and you will eventually find links to download the images, we need only **/linux.iso** one as the others are just basic vgabios and seabios images, with no patching in them. As always dealing with this kind of tasks we need **QEMU** and the good-old **IDA**. Load image with **QEMU**
 ![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvi-2/qemu.PNG)
-Attach to **QEMU** with **remote GDB** from **IDA**. Suspend the process from **IDA** and press a couple of times *F7* to trace into and find where is code resided in the virtual memmory. You will end up with something like this
+Attach to **QEMU** with **remote GDB** from **IDA**. Suspend the process from **IDA** and press a couple of times *F7* to trace into and find where is code resided in the virtual memmory. You will end up with something like this(or you have madskillz in bios/mbr reversing and know that the second stage in loaded into *0x7c00*)
 {% highlight ruby %}
 MEMORY:00007C6B ; ---------------------------------------------------------------------------
 MEMORY:00007C6B ror     dword_BCD98EC1[esi], 1
@@ -16,7 +16,7 @@ MEMORY:00007C77 ; --------------------------------------------------------------
 {% endhighlight %}
 And this code will be followed with other non-null bytes, but not recognized as code. Use the power of **IDA** and create code from that bytes using key *'C'*. Evetually you will get something similar.
 ![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvi-2/codepart.PNG)
-We need to find the **int 16h** command now that provides the keyboard input and we have a couple of ways to do that. Either calc the offset from this **int 10h** instruction to the **int 16h** instruction by disassembling the ISO image(with which **IDA** copes with well) or use the same logic of "creating code from data" to find it, better use the first way if you don't have some knowledge about opcodes, because you will need to filter the trash bytes on your way. But there is a thing that we need to do first, we need to define that code segment as a 16-bit segment because the mode chages from 32 to 16 we can't use 16-bit at the start, so go to *Edit->Segments->Create Segment* put the start address as *0x7c00* and the 16-bit mode bulletpoint. So I found the address of **int 16h**
+We need to find the **int 16h** command now, it provides the keyboard input and we have a couple of ways to do that. Either calc the offset from this **int 10h** instruction to the **int 16h** instruction by disassembling the ISO image(with which **IDA** copes with well) or use the same logic of "creating code from data" to find it, better use the first way if you don't have some knowledge about opcodes, because you will need to filter the trash bytes on your way. But there is a thing that we need to do first, we need to define that code segment as a 16-bit segment because the mode chages from 32 to 16 we can't use 16-bit at the start, so go to *Edit->Segments->Create Segment* put the start address as *0x7c00* and the 16-bit mode bulletpoint. So I found the address of **int 16h**
 ![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvi-2/int16h.PNG)
 Put breakpoint on it and run the process. Go to **QEMU** and enter something there, the breakpoint hits, it's time to trace now. First we will see that the pin needs to have length equal to 5.
 {% highlight ruby %}
