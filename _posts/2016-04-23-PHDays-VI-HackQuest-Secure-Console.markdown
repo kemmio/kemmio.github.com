@@ -14,6 +14,7 @@ MEMORY:00007C71 add     byte_FFFFFFE5[ecx+ecx*4], bh
 MEMORY:00007C75 jmp     short loc_7CB0
 MEMORY:00007C77 ; ---------------------------------------------------------------------------
 {% endhighlight %}
+Strange instructions, right? Just keep reading.
 And this code will be followed with other non-null bytes, but not recognized as code. Use the power of **IDA** and create code from that bytes using key *'C'*. Evetually you will get something similar.
 ![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvi-2/codepart.PNG)
 We need to find the **int 16h** command now, it provides the keyboard input and we have a couple of ways to do that. Either calc the offset from this **int 10h** instruction to the **int 16h** instruction by disassembling the ISO image(with which **IDA** copes with well) or use the same logic of "creating code from data" to find it, better use the first way if you don't have some knowledge about opcodes, because you will need to filter the trash bytes on your way. But there is a thing that we need to do first, we need to define that code segment as a 16-bit segment because the mode chages from 32 to 16 we can't use 16-bit at the start, so go to *Edit->Segments->Create Segment* put the start address as *0x7c00* and the 16-bit mode bulletpoint. So I found the address of **int 16h**
