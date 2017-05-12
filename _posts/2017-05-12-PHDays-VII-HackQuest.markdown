@@ -113,7 +113,7 @@ BETA:
 {% highlight ruby %}
 http://beta.rosnadzorcom.ru/?author=1
 {% endhighlight %}
-Пользователь Roscomnadzor, изучаем rest-api и xmlrpc в Wordpress, видим что в xmlrpc опять открыт **system.multicall**, а в /?route_rest видим хидер
+Пользователь Rosnadzorcom, изучаем rest-api и xmlrpc в Wordpress, видим что в xmlrpc опять открыт **system.multicall**, а в /?route_rest видим хидер
 {% highlight ruby %}
 Access-Control-Allow-Headers:Authorization
 {% endhighlight %}
