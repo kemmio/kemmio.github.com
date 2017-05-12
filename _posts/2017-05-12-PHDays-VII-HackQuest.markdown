@@ -20,18 +20,18 @@ http://iaica.rosnadzorcom.ru/blog/?author=1
 Кроме превью от wordpress-a ничего не приходит, попробовав еще раз но уже добавивь картинку с ссылкой на наш сниффер видим:
 ![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/blog-bot-2.png)
 Однако где применить такой логин пароль - неизвестно, папок с basic http auth -ом нет на веб-сервере, на основном сайте успешно логинимся, однако здесь надо заметить что залогиниться под пользователем admin можно при помощи любого пароля. В итоге имеем 2 факта:
-1)логин-пароль фейковые
-2)Бот из блога ходит по нашим ссылкам.
-На этот таск был опубликован хинт, который нам и будет тут полезен
+<br>1)логин-пароль фейковые
+<br>2)Бот из блога ходит по нашим ссылкам.
+<br>На этот таск был опубликован хинт, который нам и будет тут полезен
 {% highlight ruby %}
 Hint: IAICA — StyleSheets and JavaScripts are you best friends here!
 Hint: IAICA — Look at the response headers
 {% endhighlight %}
 
 Во первых замечаем что имена js и css файлов это md5('имя-файла-без-расширения') например можно заметить файл a1b01e734b573fca08eb1a65e6df9a38.css(md5('style').css)
-Смотрим на разницу в хидерах при выдаче результата от php и при обращении к js/css ресурсам 
+<br>Смотрим на разницу в хидерах при выдаче результата от php и при обращении к js/css ресурсам 
 
-php:
+<br>php:
 {% highlight ruby %}
 HTTP/1.1 200 OK
 Server: nginx
@@ -44,7 +44,7 @@ Pragma: no-cache
 Content-Length: 48632
 {% endhighlight %}
 
-js/css:
+<br>js/css:
 {% highlight ruby %}
 HTTP/1.1 200 OK
 Server: nginx
