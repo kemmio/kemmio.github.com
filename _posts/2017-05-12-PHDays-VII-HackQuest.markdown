@@ -21,14 +21,16 @@ http://iaica.rosnadzorcom.ru/blog/?author=1
 ![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/blog-bot-2.png)
 Однако где применить такой логин пароль - неизвестно, папок с basic http auth -ом нет на веб-сервере, на основном сайте успешно логинимся, однако здесь надо заметить что залогиниться под пользователем admin можно при помощи любого пароля. В итоге имеем 2 факта:
 1)логин-пароль фейковые
-2)Бот из блога ходит по нашим ссылкам
-на этот таск был опубликован хинт, который нам и будет тут полезен
+2)Бот из блога ходит по нашим ссылкам.
+На этот таск был опубликован хинт, который нам и будет тут полезен
 {% highlight ruby %}
 Hint: IAICA — StyleSheets and JavaScripts are you best friends here!
 Hint: IAICA — Look at the response headers
 {% endhighlight %}
-Во первых замечаем что имена js и css файлов это md5('имя-файла-без-расширения') например можно заметить файл a1b01e734b573fca08eb1a65e6df9a38.css
+
+Во первых замечаем что имена js и css файлов это md5('имя-файла-без-расширения') например можно заметить файл a1b01e734b573fca08eb1a65e6df9a38.css(md5('style').css)
 Смотрим на разницу в хидерах при выдаче результата от php и при обращении к js/css ресурсам 
+
 php:
 {% highlight ruby %}
 HTTP/1.1 200 OK
@@ -41,6 +43,7 @@ Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
 Pragma: no-cache
 Content-Length: 48632
 {% endhighlight %}
+
 js/css:
 {% highlight ruby %}
 HTTP/1.1 200 OK
@@ -56,19 +59,25 @@ Cache-Control: max-age=120
 Cache-Control: public
 Accept-Ranges: bytes
 {% endhighlight %}
+
 Основное различие здесь в хидерах кеширования, js/css -  кешируются, а остальные - нет причем.
 Настало время просмотреть на роутинг бэкенда/веб-сервера, сразу же замечаем, что адреса типа: 
+
 {% highlight ruby %}
 /login/md5().css
 /registration/md5().css
 /md5().css
 {% endhighlight %}
+
 Не перенаправляются на 404, а просто выводят страницу к которой мы обращались, кстати тоже самое работает также и с .js
+
 Кроме этого при обращении к одному из вышеописаных роутов в response header-ах есть:
 {% highlight ruby %}
 X-Fastcgi-Cache: MISS
 {% endhighlight %}
+
 Это означает что fastcgi_cache сконфигурирован неправильно, судя по всему он пытается выдать закешированный результат если url заканчивается на md5().js/md5().css
+
 А также
 {% highlight ruby %}
 Date: Mon, 08 May 2017 18:56:10 GMT
