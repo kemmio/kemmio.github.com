@@ -106,3 +106,55 @@ IAICA secret phrase is "Hell yeah bro! You did it! Man, you blow up this fake an
 ## PWND!
 
 ## flag:<font color="red">md5("Hell yeah bro! You did it! Man, you blow up this fake anti-corruption organization.")</font>
+<br><br><br>
+
+BETA:
+Заходим на сайт, видим что там Wordpress 4.7.4, производим обычный скан по вордпрессу, кроме плагина Akismet ничего не находим. Ищем пользователей Wordpress - находим по ссылке:
+{% highlight ruby %}
+http://beta.rosnadzorcom.ru/?author=1
+{% endhighlight %}
+Пользователь Roscomnadzor, изучаем rest-api и xmlrpc в Wordpress, видим что в xmlrpc опять открыт **system.multicall**, а в /?route_rest видим хидер
+{% highlight ruby %}
+Access-Control-Allow-Headers:Authorization
+{% endhighlight %}
+Пробуем брутить и там и там, нигде не добиваемся успехов. Порыскав еще немного идет в wp-admin и пытаемся сделать сброс пароля, оказывается на сервере стоит конфигурация вывода ошибок (скорее всего WP_DEBUG,WP_DEBUG_DISPLAY включены), кстати эту же ошибку можно увидеть, если попытаться оставить комментарий 
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/beta-error.png)
+Судя по ошибке, wordpress умирает от того что в поле Form, отправки мейла стоит значение "wordpress@_". Бежим на github вордпресса смотреть исходники функции wp_mail()
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/beta-wp-mail.png)
+Судя по коду $_SERVER["SERVER_NAME"]="_". Во время просмотра сайта, в хидерах или же в выводе кода 404 можно было заметить что на сервере работает nginx. 
+<br>Прочитав документацию узнаем, что в конфигурации nginx символ  "_" имеет специальное значени - им обозначается хостнейм по умолчанию (default), то есть, это хостнейм к которому быдет обращаться nginx если не будет других совпадений. 
+<br>Тем самым предполагаем, что есть другие хостнеймы к которым можно обратить nginx. Первое что приходит в голову, что стоит проверить - localhost. Так как нам неизвестен IP сервера, крафтим запрос следующим образом
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/beta-burp.png)
+И видим (в этом случае радостный) 403 forbidden.
+<br>Вспоминаем что при выводе ошибок мы также получаем и Full Path Disclosure. идем на http://localhost/wordpress/wp-config.php
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/beta-wp-config.png)
+Вроде бы надо приконектиться к mysql на сервере white2fan.rosnadzorcom.ru однако этот домен резолвиться в 127.0.0.1, далее промелькает мысль обратиться к этому хостнейму и найти там phpmyadmin.
+<br>После неудачных попыток догадываемся узнать побольше о самом домейне в итоге смотрим AAAA record и видим что ipv6 указывает далеко не на локалхост
+{% highlight ruby %}
+2a03:b0c0:2:d0::21c7:2001
+{% endhighlight %}
+Тут есть одна загвоздка, возможно у вашего провайдера нет роутов для ipv6(например в моем случае было именно так), но под рукой оказался сервер в Германии, так что дальнейшие действия проделываем оттуда.
+<br>Конектимся у mysql
+{% highlight ruby %}
+mysql -h 2a03:b0c0:2:d0::21c7:2001 -u wordpress -pOMGOMGWTFWTF
+{% endhighlight %}
+Видим таблицу flag 
+{% highlight ruby %}
++---------------------+
+| Tables_in_wordpress |
++---------------------+
+| flag                |
++---------------------+
+{% endhighlight %}
+Но в этой таблице нет строк, но здесь все несложно просто смотрим columns
+{% highlight ruby %}
++----------------------------------+------------+------+-----+---------+-------+
+| Field                            | Type       | Null | Key | Default | Extra |
++----------------------------------+------------+------+-----+---------+-------+
+| a33d6a48821d9c33f00219710eb9aeef | tinyint(1) | NO   |     | 1       |       |
++----------------------------------+------------+------+-----+---------+-------+
+{% endhighlight %}
+
+## PWND!
+
+## flag:<font color="red">a33d6a48821d9c33f00219710eb9aeef</font>
