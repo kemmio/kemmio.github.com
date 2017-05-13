@@ -528,5 +528,221 @@ show_source is disabled!
 
 ## flag:<font color="red">5d710ac04a2eb6af5682fd92577b3e01</font>
 
+<br><br>BLOCK: Заходим на сайт и сразу же вбиваем ковычку в поиск, получаем SQL error 
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/block-error.png)
+Получаем представление о том, где мы примерно находимся в запросе. Далее понимаем что пробелы блокируются WAF-ом, пытаемся пройтись по всем whitespace символам, удачным получается %0с, Далее пытаемся понять какие ключевые слова блокируются WAF-ом, кстати говоря, при помощи дирбаста узнаем про /logs где можем увидеть как WAF отреагировал на последние 20 реквестов. Пробуя обойти WAF на ключевом слове AND понимаем, что некоторые комбинации рандомкейса проскальзывают через WAF, проверяем специальные символы, некоторые из них блокируются, но обходятся при помощи url-encoding-а, к слову также после 'можно дописать ; и даже больше, можно выполнять stacked query, тем самым преполагаем, что имеем дело с PostgreSql. Одним словом брутфорсим минимальный инжекшн, то есть чтобы выполнялся пустой запрос без эроров. Пофаззив запросы еще немного понимаем, что WAF также по разному относиться к длине запроса. Пишем скрипт, который будет брутфорсить рандомкейс для основный ключевых слов. Получив список ключевых слов(select, from и т.д.), дополняем скрипт брутфорсом длины запроса и брутфорсом рандомкейса для имен таблиц и колонок в запросе вида: select x from y. Даем нашему скрипту брутить запрос **select table_name from information_schema.tables**
+{% highlight ruby %}
+<li style="padding: 10px;">(&#39;sites&#39;,)</li>
+<li style="padding: 10px;">(&#39;users&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_type&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_roles&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_group&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_user&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_policies&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_settings&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_rules&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_views&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_matviews&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stats&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_locks&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_cursors&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_available_extensions&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_available_extension_versions&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_prepared_xacts&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_prepared_statements&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_seclabels&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_timezone_abbrevs&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_timezone_names&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_all_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_xact_all_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_sys_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_user_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_xact_user_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_all_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_sys_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_user_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_all_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_sys_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_user_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_all_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_sys_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_user_indexes&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_all_sequences&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_sys_sequences&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_statio_user_sequences&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_activity&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_replication&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_ssl&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_replication_slots&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_database&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_bgwriter&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_user_mappings&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_attribute&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_proc&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_class&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_attrdef&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_constraint&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_inherits&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_index&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_operator&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_opfamily&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_opclass&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_am&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_amop&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_amproc&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_language&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_largeobject_metadata&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_aggregate&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_rewrite&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_trigger&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_event_trigger&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_description&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_cast&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_enum&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_namespace&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_conversion&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_depend&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_db_role_setting&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_tablespace&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_pltemplate&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_auth_members&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_shdepend&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_shdescription&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_ts_config&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_ts_config_map&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_ts_dict&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_ts_parser&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_ts_template&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_extension&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_foreign_data_wrapper&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_foreign_server&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_foreign_table&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_policy&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_replication_origin&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_default_acl&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_seclabel&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_shseclabel&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_collation&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_range&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_transform&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_xact_sys_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_database_conflicts&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_user_functions&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_xact_user_functions&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_stat_archiver&#39;,)</li>
+<li style="padding: 10px;">(&#39;pg_database&#39;,)</li>
+<li style="padding: 10px;">(&#39;information_schema_catalog_name&#39;,)</li>
+<li style="padding: 10px;">(&#39;applicable_roles&#39;,)</li>
+<li style="padding: 10px;">(&#39;administrable_role_authorizations&#39;,)</li>
+<li style="padding: 10px;">(&#39;attributes&#39;,)</li>
+<li style="padding: 10px;">(&#39;character_sets&#39;,)</li>
+<li style="padding: 10px;">(&#39;check_constraint_routine_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;check_constraints&#39;,)</li>
+<li style="padding: 10px;">(&#39;collations&#39;,)</li>
+<li style="padding: 10px;">(&#39;collation_character_set_applicability&#39;,)</li>
+<li style="padding: 10px;">(&#39;column_domain_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;column_privileges&#39;,)</li>
+<li style="padding: 10px;">(&#39;column_udt_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;columns&#39;,)</li>
+<li style="padding: 10px;">(&#39;constraint_column_usage&#39;,)</li>
+<li style=
+"padding: 10px;">(&#39;constraint_table_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;domain_constraints&#39;,)</li>
+<li style="padding: 10px;">(&#39;domain_udt_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;domains&#39;,)</li>
+<li style="padding: 10px;">(&#39;enabled_roles&#39;,)</li>
+<li style="padding: 10px;">(&#39;key_column_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;parameters&#39;,)</li>
+<li style="padding: 10px;">(&#39;referential_constraints&#39;,)</li>
+<li style="padding: 10px;">(&#39;role_column_grants&#39;,)</li>
+<li style="padding: 10px;">(&#39;routine_privileges&#39;,)</li>
+<li style="padding: 10px;">(&#39;role_routine_grants&#39;,)</li>
+<li style="padding: 10px;">(&#39;routines&#39;,)</li>
+<li style="padding: 10px;">(&#39;schemata&#39;,)</li>
+<li style="padding: 10px;">(&#39;sequences&#39;,)</li>
+<li style="padding: 10px;">(&#39;sql_features&#39;,)</li>
+<li style="padding: 10px;">(&#39;sql_implementation_info&#39;,)</li>
+<li style="padding: 10px;">(&#39;sql_languages&#39;,)</li>
+<li style="padding: 10px;">(&#39;sql_packages&#39;,)</li>
+<li style="padding: 10px;">(&#39;sql_sizing&#39;,)</li>
+<li style="padding: 10px;">(&#39;sql_sizing_profiles&#39;,)</li>
+<li style="padding: 10px;">(&#39;table_constraints&#39;,)</li>
+<li style="padding: 10px;">(&#39;table_privileges&#39;,)</li>
+<li style="padding: 10px;">(&#39;role_table_grants&#39;,)</li>
+<li style="padding: 10px;">(&#39;tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;triggered_update_columns&#39;,)</li>
+<li style="padding: 10px;">(&#39;triggers&#39;,)</li>
+<li style="padding: 10px;">(&#39;udt_privileges&#39;,)</li>
+<li style="padding: 10px;">(&#39;role_udt_grants&#39;,)</li>
+<li style="padding: 10px;">(&#39;usage_privileges&#39;,)</li>
+<li style="padding: 10px;">(&#39;role_usage_grants&#39;,)</li>
+<li style="padding: 10px;">(&#39;user_defined_types&#39;,)</li>
+<li style="padding: 10px;">(&#39;view_column_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;view_routine_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;view_table_usage&#39;,)</li>
+<li style="padding: 10px;">(&#39;views&#39;,)</li>
+<li style="padding: 10px;">(&#39;data_type_privileges&#39;,)</li>
+<li style="padding: 10px;">(&#39;element_types&#39;,)</li>
+<li style="padding: 10px;">(&#39;column_options&#39;,)</li>
+<li style="padding: 10px;">(&#39;foreign_data_wrapper_options&#39;,)</li>
+<li style="padding: 10px;">(&#39;foreign_data_wrappers&#39;,)</li>
+<li style="padding: 10px;">(&#39;foreign_server_options&#39;,)</li>
+<li style="padding: 10px;">(&#39;foreign_servers&#39;,)</li>
+<li style="padding: 10px;">(&#39;foreign_table_options&#39;,)</li>
+<li style="padding: 10px;">(&#39;foreign_tables&#39;,)</li>
+<li style="padding: 10px;">(&#39;user_mapping_options&#39;,)</li>
+<li style="padding: 10px;">(&#39;user_mappings&#39;,)</li>
+</ul>
+{% endhighlight %}
+Видим таблицу users. Пытаемся угадать имена колонок, правильная колонка users.name. В результате видим
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/block-token.png)
+Флаг - md5(token)
 
+## PWND!
 
+## flag:<font color="red">087765877497f0724f3c5bb9eea272dd</font>
+
+**Все остальные таски будут описаны менее детально, так как они намного проще**
+
+<br><br>CHAT: Сканируем папки, находим /.git/, скачиваем при помощи dvcs-ripper-а во первых замечаем в одном из middleware-ов express-a секретный роут **/7his_c0nT3n7_is_MY_Pr1v@t3_pR0perTy!!11!** далее в функции adminReply() замечаем что используется lodash.result по отношению к обьекту res(response), это функция позволяет строку превратить в путь к параметру обьекта. Изменяем state.message.text на req.cookies.sid (так как в response есть референс на обьект request) и идем проверять чтобы админ ответил, он отвечает своим cookie берем его и идем по секретному роуту - и видим флаг
+
+## PWND!
+
+## flag:<font color="red">64cbbcc515819d16115a4663251199dd</font>
+
+<br><br>ERAWMOSNAR: Скачиваем файл - скомпилированный golang бинарь, ищем строку "Enter PIN" или "PIN Incorrect" находим их в функции которая все и делает. Трассируем код и смотрим что происходит с нашим 8-цифровым PIN-ом, видим, что к нему добавляется "\n" (потому что он не фильтруется программой при вводе) и еще некий хеш, который работает как соль, после чего считается sha хеш и сравнивается со вшитым. Нам остается просто правильно запустить oclHashcat с маской на 8 цифр и хекс-солью в виде "\nHASH". Вводит сбрученный PIN и программа выдает флаг.
+
+## PWND!
+
+## flag:<font color="red">1a9f5630e2f0a95f3a00c38be9f44690</font>
+
+<br><br>COMPRESS.PNG: Берем картинку и либо вручную, либо при помощи бесплатных OCR api получаем текст, если делать через OCR то немного надо подправить потом код, запускаем, а там 15-puzzle, либо решаем вручную либо при помощи онлайн солверов. Если решить программа выдает флаг.
+
+## PWND!
+
+## flag:<font color="red">01030107010301150103010701030115</font>
+
+<br><br>1.PNG: Берем PIL и пишем на скрипт, читаем алфа-канал, видим так текст вида []+[]+... выглядит как JSfuck открываем js-консоль браузера и кидаем туда, получаем текст вида "100111...21010...2....1010", разделяем по двойкам и рисуем в black-white, получается QR-code берем любой qr-декодер и получаем флаг. 
+
+## PWND!
+
+## flag:<font color="red">af49359a251b70e24ba98f15b02cd271</font>
+
+<br><br>Stack: Смотрим на то какой запрос идет на подсчете баллов, портим запрос получаем эрор с дисклоузом версии библиотеки, гуглим эксплоит, пытаемся повторить - блокирует ваф, для обхода делаем реверс пейлоада, то есть, отправляем в виде "esrever".split("").reverse().join(""), пробуем снова, слишком сложный запрос, читаем сорсы библиотеки на гитхабе и сокращаем просто до вида:
+{% highlight ruby %}
+process.binding('spawn_sync').spawn({file:"/bin/ls", args:["/bin/ls","-al"]})
+{% endhighlight %}
+Имеем RCE, идем в корень файловой системы, находим файл с флагом
+
+## PWND!
+
+## flag:<font color="red">0e9d2a760f22b0013c5b14dcea0d16bd</font>
+
+<br><br>BONUS1/4: Один флаг просто гуглиться через "rosnadzorcom flag", а другой через саблист доменов при помощи SSL сертификатов, такое умеет делать например Sublist3r
+
+## PWND!
+
+## flag:<font color="red">94d1d3b923974da436bcadb76e52e221</font>
+## flag:<font color="red">e464d10e05510330377dacfe8bd1dc51</font>
