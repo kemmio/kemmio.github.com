@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "PHDays VII HackQuest"
+title:  "PHDays VII HackQuest Full write-up, all tasks"
 subtitle: ""
 categories: [ctf]
 ---
